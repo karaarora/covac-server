@@ -28,5 +28,13 @@ module.exports = {
             });
             return Promise.resolve(results)
         });        
+    },
+    deleteUser: (email) => {
+        return db.collection("users").where('phone', '==', email).get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                doc.ref.delete()
+            })
+        });       
     }
+
 }

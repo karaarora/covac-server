@@ -13,28 +13,41 @@ const utils = require('./utils/centerUtils')
 app.use(express.static(__dirname + './public'));
 app.use(bodyParser.json());
 
-cron.schedule('* * * * *', () => {
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
+cron.schedule('59 * * * *', () => {
     userService.getAllUsers().then((users) => {
         users.forEach((user) => {
             centerService.getAllCenters(user.pin).then((centers) => {
-                let availableCenters = utils.getAvailableCenters(centers, user.age)
-                if (availableCenters.length > 0) {
-                    commService.sendSms(user.name, user.phone, availableCenters)
+                if (centers && centers.length > 0) {
+                    let availableCenters = utils.getAvailableCenters(centers, user.age)
+                    console.log(availableCenters.length, user.name, user.phone)
+                    if (availableCenters.length > 0) {
+                        let freeCenters = []
+                        let paidCenters = []
+                        availableCenters.forEach((center) => {
+                            if (center.fee_type == "Free") freeCenters.push(center.name)
+                            else paidCenters.push(center.name)
+                        })
+                        commService.sendSms(user.name, user.phone, freeCenters, paidCenters)
+                    }
                 }
             })
         })
     })
 });
 
-app.get('/centers', (req, res) => {
-    services.getAllCenters('143001').then((data) => {
-        res.send(utils.getAvailableCenters(data, 45))
-    })
+app.post('/ping', (req, res) => {
+    res.send('pong')
 })
 
 app.post('/addUser', (req, res) => {
     userService.getAllUsers().then((users) => {
-        let alreadyExists = users.find((user) => user.phone == req.body.phone) 
+        let alreadyExists = users.find((user) => user.phone == req.body.phone)
         if (alreadyExists) {
             res.send({
                 status: 200,
@@ -42,17 +55,26 @@ app.post('/addUser', (req, res) => {
             })
         } else {
             userService.addUser(req.body)
-            .then(() => {
-                res.send({
-                    status: 200,
-                    msg: 'User added'
+                .then(() => {
+                    res.send({
+                        status: 200,
+                        msg: 'User added'
+                    })
                 })
-            })
         }
     })
-    
+
 })
 
-app.listen(process.env.PORT || 3000, () => {
+app.get('/unsubsribe', (req, res) => {
+    let email = req.query.u || ''
+    userService.deleteUser(email).then(() => {
+        res.send("Unsubsribed successfully")
+    }).catch(() => {
+        res.send("Error in unsubscribing")
+    })
+})
+
+app.listen(process.env.PORT || 5000, () => {
     console.log("Server is up...")
 })
