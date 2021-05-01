@@ -18,8 +18,8 @@ cron.schedule('* * * * *', () => {
         users.forEach((user) => {
             centerService.getAllCenters(user.pin).then((centers) => {
                 let availableCenters = utils.getAvailableCenters(centers, user.age)
-                if (availableCenters.length == 0) {
-                    commService.sendSms(user.name, user.phone)
+                if (availableCenters.length > 0) {
+                    commService.sendSms(user.name, user.phone, availableCenters)
                 }
             })
         })
