@@ -1,0 +1,10 @@
+{
+  "aws": {
+    "accessKeyId": "",
+    "secretAccessKey": "",
+    "region": "us-west-2"
+  },
+  "email": {
+    "sender": "covaccineupdates@gmail.com"
+  }
+}
