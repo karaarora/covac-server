@@ -18,7 +18,7 @@ app.use(function (req, res, next) {
     next();
 });
 
-cron.schedule('* * * * *', () => {
+cron.schedule('59 * * * *', () => {
     userService.getAllUsers().then((users) => {
         users.forEach((user) => {
             centerService.getAllCenters(user.pin)
