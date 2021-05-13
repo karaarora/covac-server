@@ -3,7 +3,6 @@ const app = express()
 const bodyParser = require('body-parser');
 var cron = require('node-cron');
 
-
 const services = require('./services/centerService')
 const userService = require('./services/userService')
 const centerService = require('./services/centerService')
@@ -22,7 +21,8 @@ app.use(function (req, res, next) {
 cron.schedule('59 * * * *', () => {
     userService.getAllUsers().then((users) => {
         users.forEach((user) => {
-            centerService.getAllCenters(user.pin).then((centers) => {
+            centerService.getAllCenters(user.pin)
+                .then((centers) => {
                 if (centers && centers.length > 0) {
                     let availableCenters = utils.getAvailableCenters(centers, user.age)
                     console.log(availableCenters.length, user.name, user.phone)
@@ -33,12 +33,15 @@ cron.schedule('59 * * * *', () => {
                             if (center.fee_type == "Free") freeCenters.push(center.name)
                             else paidCenters.push(center.name)
                         })
-                        commService.sendSms(user.name, user.phone, freeCenters, paidCenters)
+                        commService.sendEmail(user.name, user.phone, freeCenters, paidCenters)
                     }
                 }
             })
         })
-    })
+    }).catch(error => {
+            console.log('Some problem with API',error.message)
+        }
+    )
 });
 
 app.post('/ping', (req, res) => {

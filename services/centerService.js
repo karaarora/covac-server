@@ -10,7 +10,7 @@ module.exports = {
            return data.centers
         })
         .catch((error) => {
-            return error
+            console.log('Some problem with getAllCenters:',error.message)
         })
     }
 }
